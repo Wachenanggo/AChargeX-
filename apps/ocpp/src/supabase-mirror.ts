@@ -315,7 +315,14 @@ export async function startSupabaseMirror(store: Store, cfg: { url: string; serv
       case 'session': {
         if (!isUuid(e.session.userId)) break; // demo users are not persisted
         const force = e.session.state !== 'charging';
-        throttled(`ses:${e.session.id}`, 5000, force, () => db.from('charging_sessions').upsert(sessionRow(e.session)).then(warn('session')));
+        const s = e.session;
+        throttled(`ses:${s.id}`, 5000, force, async () => {
+          warn('session')(await db.from('charging_sessions').upsert(sessionRow(s)));
+          // Sampled meter history (charger-reported, cumulative register).
+          if (s.meterStartWh !== undefined && (s.state === 'charging' || s.state === 'completed')) {
+            warn('meter')(await db.from('meter_values').insert({ session_id: s.id, at: new Date().toISOString(), energy_wh: Math.round(s.meterStartWh + s.energyWh), power_w: s.powerW }));
+          }
+        });
         break;
       }
       case 'payment':

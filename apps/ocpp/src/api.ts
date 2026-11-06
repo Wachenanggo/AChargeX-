@@ -20,7 +20,7 @@ import {
 } from '@achargex/shared';
 import type { Store, BusEvent } from './store';
 import { Csms, HttpError, type Principal } from './csms';
-import { authenticate, type AuthConfig } from './auth';
+import { createAuthenticator, type AuthConfig } from './auth';
 import { configuredProviders } from './payments';
 
 export interface ApiConfig extends AuthConfig {
@@ -89,6 +89,9 @@ function numIn(v: unknown, field: string, min: number, max: number): number {
 }
 
 export function createApi(store: Store, csms: Csms, cfg: ApiConfig) {
+  const authenticate = createAuthenticator(cfg);
+  // CORS: "*" or a comma-separated allow-list (include capacitor://localhost and https://localhost for native apps).
+  const allowList = cfg.corsOrigin === '*' ? null : cfg.corsOrigin.split(',').map((s) => s.trim()).filter(Boolean);
   const isControl = (p: Principal) => can(p.role, 'control:view');
   const ownsStation = (p: Principal, s: StationWithDetail) => s.ownerId === p.userId;
   const canSeeStation = (p: Principal, s: StationWithDetail) => s.listingStatus === 'approved' || ownsStation(p, s) || isControl(p) || can(p.role, 'admin:approve_stations');
@@ -563,7 +566,9 @@ export function createApi(store: Store, csms: Csms, cfg: ApiConfig) {
 
   return async function handle(req: IncomingMessage, res: ServerResponse) {
     const url = new URL(req.url ?? '/', 'http://localhost');
-    res.setHeader('Access-Control-Allow-Origin', cfg.corsOrigin);
+    const origin = req.headers.origin;
+    if (!allowList) res.setHeader('Access-Control-Allow-Origin', '*');
+    else if (origin && allowList.includes(origin)) res.setHeader('Access-Control-Allow-Origin', origin);
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-demo-role');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
     res.setHeader('Vary', 'Origin');
@@ -571,7 +576,7 @@ export function createApi(store: Store, csms: Csms, cfg: ApiConfig) {
       res.writeHead(204).end();
       return;
     }
-    const p = authenticate(req, url, cfg);
+    const p = authenticate(req, url);
 
     if (url.pathname === '/api/events' && req.method === 'GET') return sse(req, res, p);
 

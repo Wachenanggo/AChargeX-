@@ -219,7 +219,7 @@ export class SimulatedChargePoint {
     const rpc = this.rpc;
     if (!rpc) return;
     await this.sendStatus(connectorId, 'Preparing');
-    const meterStart = this.registerWh;
+    const meterStart = Math.round(this.registerWh);
     let transactionId: string;
     if (this.is201) {
       transactionId = `${this.o.identity}-${Date.now().toString(36)}-${++this.local2Tx}`;

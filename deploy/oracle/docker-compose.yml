@@ -1,0 +1,24 @@
+# Oracle Cloud Always Free VM (or any Linux VM): OCPP service + Caddy (free automatic HTTPS / WSS)
+# Run from the repo root:  docker compose -f deploy/oracle/docker-compose.yml up -d --build
+services:
+  ocpp:
+    build:
+      context: ../..
+      dockerfile: apps/ocpp/Dockerfile
+    env_file: ../../apps/ocpp/.env
+    restart: unless-stopped
+    expose: ['8080']
+  caddy:
+    image: caddy:2.8-alpine
+    restart: unless-stopped
+    ports: ['80:80', '443:443']
+    environment:
+      OCPP_DOMAIN: ${OCPP_DOMAIN:?set OCPP_DOMAIN, e.g. achargex.duckdns.org}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on: [ocpp]
+volumes:
+  caddy_data:
+  caddy_config:

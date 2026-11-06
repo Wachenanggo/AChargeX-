@@ -27,7 +27,7 @@ export interface OcppServerOptions {
   heartbeatS: number;
   corsOrigin: string;
   allowDemoPaymentOnReal: boolean;
-  supabase?: { url: string; serviceKey: string; jwtSecret: string };
+  supabase?: { url: string; serviceKey: string; jwtSecret?: string };
   quiet?: boolean;
 }
 
@@ -41,6 +41,7 @@ export function createOcppServer(o: OcppServerOptions) {
   const apiCfg = {
     demoMode: o.demoMode,
     jwtSecret: o.supabase?.jwtSecret,
+    supabaseUrl: o.supabase?.url,
     publicOcppUrl,
     publicAppUrl: o.publicAppUrl,
     corsOrigin: o.corsOrigin,

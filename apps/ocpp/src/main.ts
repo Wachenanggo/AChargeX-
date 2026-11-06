@@ -2,9 +2,11 @@
 import { createOcppServer } from './app';
 
 const env = process.env;
+// SUPABASE_JWT_SECRET is optional: tokens are verified with the project's JWKS, and
+// also with the legacy HS256 secret when provided.
 const supabase =
-  env.SUPABASE_URL && env.SUPABASE_SERVICE_ROLE_KEY && env.SUPABASE_JWT_SECRET
-    ? { url: env.SUPABASE_URL, serviceKey: env.SUPABASE_SERVICE_ROLE_KEY, jwtSecret: env.SUPABASE_JWT_SECRET }
+  env.SUPABASE_URL && env.SUPABASE_SERVICE_ROLE_KEY
+    ? { url: env.SUPABASE_URL, serviceKey: env.SUPABASE_SERVICE_ROLE_KEY, jwtSecret: env.SUPABASE_JWT_SECRET || undefined }
     : undefined;
 const demoMode = env.DEMO_MODE ? env.DEMO_MODE === 'true' : !supabase;
 

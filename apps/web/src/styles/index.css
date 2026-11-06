@@ -1,0 +1,116 @@
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+@import '@fontsource/inter/600.css';
+@import '@fontsource/inter/700.css';
+@import '@fontsource/inter/800.css';
+@import '@fontsource/jetbrains-mono/500.css';
+@import '@fontsource/jetbrains-mono/700.css';
+@import 'leaflet/dist/leaflet.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --nav-h: 72px;
+  color-scheme: light;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    @apply bg-ax-bg font-sans text-ax-navy antialiased;
+    overflow-x: hidden;
+  }
+  #root {
+    min-height: 100dvh;
+  }
+  :focus-visible {
+    outline: 2px solid #00bf80;
+    outline-offset: 2px;
+  }
+  button {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+}
+
+@layer components {
+  /* micro-label — 10–11px uppercase tracking (reference style) */
+  .eyebrow {
+    @apply text-[11px] font-semibold uppercase tracking-[1.3px] text-ax-muted;
+  }
+  .num {
+    @apply font-mono;
+    font-variant-numeric: tabular-nums;
+  }
+  .pb-nav {
+    padding-bottom: calc(var(--nav-h) + var(--safe-bottom) + 16px);
+  }
+  .pt-safe {
+    padding-top: max(var(--safe-top), 0px);
+  }
+  .scroll-x {
+    @apply flex overflow-x-auto;
+    scrollbar-width: none;
+  }
+  .scroll-x::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@media (min-width: 1024px) {
+  .pb-nav {
+    padding-bottom: 32px;
+  }
+}
+
+/* Leaflet polish */
+.leaflet-container {
+  font-family: Inter, system-ui, sans-serif;
+  background: #eef3f0;
+}
+.leaflet-control-attribution {
+  font-size: 10px !important;
+  background: rgba(255, 255, 255, 0.85) !important;
+}
+.leaflet-bar a {
+  color: #192338 !important;
+}
+.ax-pin {
+  background: transparent;
+  border: 0;
+}
+
+@keyframes ax-pulse {
+  0% { transform: scale(1); opacity: 0.6; }
+  100% { transform: scale(2.4); opacity: 0; }
+}
+.ax-pulse::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: currentColor;
+  animation: ax-pulse 1.6s ease-out infinite;
+}
+
+@keyframes ax-sheet-in {
+  from { transform: translateY(24px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.animate-sheet {
+  animation: ax-sheet-in 0.22s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

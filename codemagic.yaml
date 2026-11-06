@@ -1,0 +1,44 @@
+# Codemagic — builds the iOS app on a cloud Mac and uploads it to TestFlight. No Mac needed.
+# One-time setup (all in the Codemagic web UI, works from an iPad):
+#   1. Connect this GitHub repo at codemagic.io
+#   2. Teams → Integrations → App Store Connect: add an App Store Connect API key (name it "achargex_asc")
+#   3. Code signing identities → iOS: let Codemagic generate/fetch a distribution certificate
+#      and an App Store provisioning profile for bundle id ph.achargex.go
+#   4. Environment variables group "achargex": VITE_API_URL, VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY
+# Requires an Apple Developer Program membership (US$99/year).
+workflows:
+  ios-testflight:
+    name: iOS → TestFlight
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    integrations:
+      app_store_connect: achargex_asc
+    environment:
+      groups: [achargex]
+      node: 22
+      xcode: latest
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: ph.achargex.go
+    scripts:
+      - name: Install
+        script: npm ci --no-audit --no-fund
+      - name: Build web
+        script: npm run build -w @achargex/web
+      - name: Add iOS platform
+        script: |
+          cd apps/web
+          npx cap add ios
+          npx cap sync ios
+      - name: Signing
+        script: xcode-project use-profiles
+      - name: Build IPA
+        script: |
+          cd apps/web/ios/App
+          xcode-project build-ipa --workspace App.xcworkspace --scheme App
+    artifacts:
+      - apps/web/ios/App/build/ios/ipa/*.ipa
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true

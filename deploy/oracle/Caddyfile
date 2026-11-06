@@ -1,0 +1,7 @@
+# Caddy gets a free Let's Encrypt certificate and proxies both HTTPS (API/SSE) and WSS (chargers).
+{$OCPP_DOMAIN} {
+	encode gzip
+	reverse_proxy ocpp:8080 {
+		flush_interval -1
+	}
+}

@@ -1,0 +1,22 @@
+# Render Blueprint — quick-start OCPP service on Render's FREE plan.
+# Note: free web services sleep after ~15 minutes without HTTP traffic, which drops charger
+# connections. Good for demos; use the Oracle VM setup (deploy/oracle) for real chargers.
+services:
+  - type: web
+    name: achargex-ocpp
+    runtime: docker
+    plan: free
+    dockerfilePath: apps/ocpp/Dockerfile
+    dockerContext: .
+    healthCheckPath: /healthz
+    envVars:
+      - key: PUBLIC_OCPP_URL
+        sync: false
+      - key: PUBLIC_APP_URL
+        sync: false
+      - key: CORS_ORIGIN
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
