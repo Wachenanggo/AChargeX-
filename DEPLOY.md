@@ -1,18 +1,29 @@
-# Deploying AChargeX for free (no Mac required)
+# Deploying AChargeX for free
 
-You'll end up with:
+## ✅ Recommended for now: one free Render service (5 minutes, no credit card, no terminal)
 
-| Piece | Where | Cost |
-|---|---|---|
-| Web app (Go / Network / Control, installable PWA) | **Vercel** Hobby | free |
-| Accounts + database | **Supabase** Free | free (pauses after ~1 week of no activity; un-pause in dashboard) |
-| OCPP service (chargers connect here) | **Oracle Cloud Always Free** VM + Caddy | free (card needed for sign-up verification) |
-| Android app | **GitHub Actions** builds an APK | free |
-| iPhone / iPad app | **Codemagic** cloud Mac → TestFlight | free tier + Apple Developer US$99/yr |
+Everything runs as **one service at one URL**: the web app, the API and the OCPP WebSocket endpoint. It's built from the root `Dockerfile` and configured by `render.yaml`.
 
-> **Why not put everything on Vercel?** Vercel runs short-lived serverless functions. A charger keeps one WebSocket open 24/7, so the OCPP service needs an always-on server.
+1. Sign up at **render.com** with your GitHub account (works from an iPad browser).
+2. **New → Blueprint →** pick the `AChargeX-` repo (branch `claude/nice-meitner-26a3s1`, or `main` once merged) → **Apply**.
+3. Wait for the first build (~5–8 min). You get a URL like `https://achargex.onrender.com`:
+   - **App:** `https://achargex.onrender.com`. Open it in Safari → Share → **Add to Home Screen** to use it like an app.
+   - **Chargers:** `wss://achargex.onrender.com/ocpp/<identity>` (TLS is included, so no domain or certificate setup).
+4. Done. It runs in **demo mode** with 13 simulated chargers, so you can try Go, Network and Control (switch role under Account → Demo mode). Every push to the branch redeploys automatically.
 
-Everything below can be done from an iPad browser.
+**Free-plan limits to know**
+- It **sleeps after ~15 minutes with no visitors**. The next visit takes ~1 minute to wake up.
+- Demo data (sessions, stations you add) **resets on every restart**, because there's no database yet.
+- A sleeping service drops charger WebSockets, so it's fine for demos and for testing your own charger for a short while, but not for a public station.
+
+### When to move beyond this
+| You want… | Add |
+|---|---|
+| Real accounts and data that survive restarts | **Supabase** (section 1). Put `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` in Render's environment, set `DEMO_MODE=false`, and add `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY`. |
+| Real chargers connected 24/7 | Run the **same Docker image** on an always-on free VM (**Oracle Always Free**, section 2). |
+| Android / iOS store apps | Sections 5–6 (set `VITE_API_URL` to your Render URL). |
+
+> **Why not Vercel alone?** Vercel runs short-lived serverless functions. A charger keeps one WebSocket open 24/7, which needs a long-running server. Render (or a VM) runs the whole thing; Vercel is optional for the web app only (section 3).
 
 ---
 
@@ -38,7 +49,7 @@ Everything below can be done from an iPad browser.
 
 The OCPP service verifies tokens with your project's JWKS automatically. `SUPABASE_JWT_SECRET` is only needed for projects that still use the legacy HS256 secret.
 
-## 2. OCPP service on Oracle Always Free (recommended)
+## 2. Always-on: Oracle Always Free VM (for real chargers)
 
 1. Sign up at **cloud.oracle.com** → Create a **VM instance** (Ubuntu 22.04/24.04, "Always Free eligible" shape, e.g. Ampere A1 1 OCPU / 6 GB).
 2. Networking: in the VCN's security list add **Ingress TCP 80 and 443** from `0.0.0.0/0`.
@@ -67,9 +78,9 @@ The OCPP service verifies tokens with your project's JWKS automatically. `SUPABA
    ```
 6. Update later with `git pull && OCPP_DOMAIN=... sudo -E docker compose -f deploy/oracle/docker-compose.yml up -d --build`.
 
-**Quick-start alternative:** Render → New → Blueprint → pick this repo (`render.yaml`). Fine for demos, but the free plan sleeps after ~15 min without HTTP traffic and drops chargers.
+This runs the same all-in-one image (web app + API + OCPP) behind Caddy, so the VM URL serves the app too. Vercel isn't needed.
 
-## 3. Web app on Vercel
+## 3. (Optional) Web app on Vercel
 
 1. **vercel.com → Add New → Project →** import this GitHub repo.
 2. **Root Directory:** `apps/web` (the included `vercel.json` handles the monorepo build and SPA routing).
@@ -80,10 +91,10 @@ The OCPP service verifies tokens with your project's JWKS automatically. `SUPABA
    VITE_SUPABASE_ANON_KEY=eyJ...
    VITE_GOOGLE_OAUTH=false
    ```
-4. Deploy. Open the URL. Without Supabase variables the app runs in clearly labelled **DEMO** mode.
+4. Deploy. Only useful if you want the web app on Vercel's CDN; the Render / Oracle URL already serves it. Remember to add the Vercel origin to `CORS_ORIGIN` on the server.
 
 ## 4. Install on iPad / iPhone today (PWA, free, no Mac)
-Open your Vercel URL in **Safari → Share → Add to Home Screen**. It launches full-screen like an app, works offline for the shell, and keeps the camera QR scanner.
+Open your app URL (Render or Vercel) in **Safari → Share → Add to Home Screen**. It launches full-screen like an app, works offline for the shell, and keeps the camera QR scanner.
 
 ## 5. Android APK (GitHub Actions)
 1. GitHub repo → **Settings → Secrets and variables → Actions → Variables**: add `VITE_API_URL`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`.
@@ -97,7 +108,7 @@ Open your Vercel URL in **Safari → Share → Add to Home Screen**. It launches
 
 ## 7. Connect a real charger
 1. In **AChargeX Network → Add station**, register the station and its chargers. You'll get, per charger:
-   - **Central System URL** — `wss://yourname.duckdns.org/ocpp/AX-XXXXXXXX`
+   - **Central System URL** — e.g. `wss://achargex.onrender.com/ocpp/AX-XXXXXXXX` (or your VM domain)
    - **Identity** (username) and a one-time **password** (HTTP Basic auth, OCPP Security Profile 1)
 2. In the charger's own configuration (its web portal or installer app), set the OCPP / Central System URL, charge point ID and password. Choose OCPP 2.0.1 or 1.6J — the server negotiates either.
 3. The station page shows **"Connected · OCPP x"** once the BootNotification arrives.

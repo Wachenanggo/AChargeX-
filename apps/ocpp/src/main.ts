@@ -10,6 +10,10 @@ const supabase =
     : undefined;
 const demoMode = env.DEMO_MODE ? env.DEMO_MODE === 'true' : !supabase;
 
+// Hosts like Render expose the public URL (RENDER_EXTERNAL_URL); derive defaults from it.
+const externalUrl = (env.PUBLIC_APP_URL ?? env.RENDER_EXTERNAL_URL ?? '').replace(/\/$/, '');
+const derivedOcppUrl = externalUrl ? externalUrl.replace(/^http/, 'ws') + '/ocpp' : undefined;
+
 const app = createOcppServer({
   port: Number(env.PORT ?? 8080),
   demoMode,
@@ -17,8 +21,9 @@ const app = createOcppServer({
   simSpeed: Number(env.SIM_SPEED ?? 20),
   simSecret: env.SIM_SECRET,
   allowUnregistered: env.ALLOW_UNREGISTERED_CHARGERS ? env.ALLOW_UNREGISTERED_CHARGERS === 'true' : demoMode,
-  publicOcppUrl: env.PUBLIC_OCPP_URL,
-  publicAppUrl: env.PUBLIC_APP_URL ?? 'http://localhost:5173',
+  publicOcppUrl: env.PUBLIC_OCPP_URL ?? derivedOcppUrl,
+  publicAppUrl: externalUrl || 'http://localhost:5173',
+  staticDir: env.STATIC_DIR || undefined,
   heartbeatS: Number(env.HEARTBEAT_INTERVAL ?? 60),
   corsOrigin: env.CORS_ORIGIN ?? '*',
   allowDemoPaymentOnReal: env.ALLOW_DEMO_PAYMENT_ON_REAL === 'true',

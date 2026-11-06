@@ -26,7 +26,7 @@ Open http://localhost:5173. With no keys configured it runs in **demo mode**: th
 
 ## Tests
 ```bash
-npm test                 # 33 tests, incl. full charging sessions over real WebSockets (OCPP 1.6 + 2.0.1)
+npm test                 # 36 tests, incl. full charging sessions over real WebSockets (OCPP 1.6 + 2.0.1)
 npm run build
 node scripts/screens.mjs http://localhost:4173 screenshots   # 16 screens × 7 viewports + overflow audit
 node scripts/e2e.mjs http://localhost:4173 screenshots/e2e   # UI flows
@@ -34,12 +34,12 @@ sudo bash supabase/tests/rls_check.sh                        # database RLS chec
 ```
 
 ## Deploy for free
-See **[DEPLOY.md](DEPLOY.md)**:
-- Vercel hosts the web app.
-- Supabase handles auth and the database.
-- An Oracle Always Free VM runs the OCPP service (Vercel can't keep a charger's WebSocket open).
-- GitHub Actions builds the Android APK.
-- Codemagic builds the iOS/TestFlight app, so you don't need a Mac.
+**Recommended now:** one free Render service runs everything (web app + API + OCPP) at one URL. Go to render.com → New → Blueprint → pick this repo → Apply. No credit card or terminal needed; it uses `render.yaml` + the root `Dockerfile`.
+
+Later, see **[DEPLOY.md](DEPLOY.md)**:
+- Add Supabase for real accounts and data that persist.
+- Move the same image to an Oracle Always Free VM so real chargers stay connected 24/7.
+- Build Android (GitHub Actions) and iOS (Codemagic → TestFlight) apps, no Mac needed.
 
 ## Connecting a charger
 Register the charger in **AChargeX Network**. Then enter the Central System URL it shows you (`wss://<your-ocpp-host>/ocpp/<identity>`), plus the identity and password, into the charger's own OCPP settings. Drivers can only charge there once three things are true:

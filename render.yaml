@@ -1,22 +1,31 @@
-# Render Blueprint — quick-start OCPP service on Render's FREE plan.
-# Note: free web services sleep after ~15 minutes without HTTP traffic, which drops charger
-# connections. Good for demos; use the Oracle VM setup (deploy/oracle) for real chargers.
+# Render Blueprint — the recommended FREE deployment for now.
+# One service runs everything: the web app, the API and the OCPP WebSocket endpoint,
+# at a single URL like https://achargex.onrender.com (chargers: wss://achargex.onrender.com/ocpp/<id>).
+#
+# Deploy: render.com → New → Blueprint → select this repo → Apply. No credit card needed.
+# Free-plan behaviour: sleeps after ~15 min without visitors (first visit then takes ~1 min
+# to wake) and demo data resets on each restart. Fine for demos/testing; for real chargers
+# that must stay connected 24/7, move the same Docker image to an always-on host (DEPLOY.md).
 services:
   - type: web
-    name: achargex-ocpp
+    name: achargex
     runtime: docker
     plan: free
-    dockerfilePath: apps/ocpp/Dockerfile
+    dockerfilePath: ./Dockerfile
     dockerContext: .
     healthCheckPath: /healthz
+    autoDeploy: true
     envVars:
-      - key: PUBLIC_OCPP_URL
-        sync: false
-      - key: PUBLIC_APP_URL
-        sync: false
+      # PUBLIC_APP_URL / PUBLIC_OCPP_URL default to Render's RENDER_EXTERNAL_URL automatically.
+      - key: DEMO_MODE
+        value: 'true'
+      - key: SIMULATOR
+        value: 'true'
+      - key: SIM_SPEED
+        value: '20'
+      - key: ALLOW_UNREGISTERED_CHARGERS
+        value: 'true'
       - key: CORS_ORIGIN
-        sync: false
-      - key: SUPABASE_URL
-        sync: false
-      - key: SUPABASE_SERVICE_ROLE_KEY
-        sync: false
+        value: '*'
+      # Later, to switch on real accounts: add SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY here,
+      # set DEMO_MODE=false, and pass VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY as build args.

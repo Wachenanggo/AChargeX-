@@ -13,6 +13,7 @@ import { Csms } from './csms';
 import { createApi } from './api';
 import { SimulatedChargePoint } from './sim/simulator';
 import { startSupabaseMirror } from './supabase-mirror';
+import { createStaticHandler } from './static';
 
 export interface OcppServerOptions {
   port: number;
@@ -29,6 +30,8 @@ export interface OcppServerOptions {
   allowDemoPaymentOnReal: boolean;
   supabase?: { url: string; serviceKey: string; jwtSecret?: string };
   quiet?: boolean;
+  /** Serve the built web app from this directory (single-service deployment). */
+  staticDir?: string;
 }
 
 export function createOcppServer(o: OcppServerOptions) {
@@ -49,11 +52,13 @@ export function createOcppServer(o: OcppServerOptions) {
   };
   const api = createApi(store, csms, apiCfg);
 
-  const server = createServer((req, res) => {
-    if (req.url === '/' || req.url === '/healthz') {
+  const serveStatic = o.staticDir ? createStaticHandler(o.staticDir) : null;
+  const server = createServer(async (req, res) => {
+    if (req.url === '/healthz' || (!serveStatic && req.url === '/')) {
       res.writeHead(200, { 'Content-Type': 'text/plain' }).end('AChargeX OCPP service — chargers connect to /ocpp/<identity>\n');
       return;
     }
+    if (serveStatic && (await serveStatic(req, res))) return;
     void api(req, res);
   });
 
@@ -123,7 +128,7 @@ export function createOcppServer(o: OcppServerOptions) {
       publicOcppUrl = `ws://localhost:${port}/ocpp`;
       apiCfg.publicOcppUrl = publicOcppUrl;
     }
-    log(`AChargeX OCPP service on :${port}`);
+    log(`AChargeX OCPP service on :${port}${o.staticDir ? ` (also serving web app from ${o.staticDir})` : ''}`);
     log(`  mode: ${o.demoMode ? 'DEMO' : 'LIVE'} · supabase: ${o.supabase ? 'on' : 'off'} · simulator: ${o.simulator ? 'on' : 'off'}`);
     log(`  chargers connect to: ${publicOcppUrl}/<identity>`);
 

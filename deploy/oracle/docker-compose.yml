@@ -1,10 +1,10 @@
-# Oracle Cloud Always Free VM (or any Linux VM): OCPP service + Caddy (free automatic HTTPS / WSS)
+# Oracle Cloud Always Free VM (or any Linux VM): all-in-one AChargeX (web + API + OCPP) + Caddy (free HTTPS / WSS)
 # Run from the repo root:  docker compose -f deploy/oracle/docker-compose.yml up -d --build
 services:
   ocpp:
     build:
       context: ../..
-      dockerfile: apps/ocpp/Dockerfile
+      dockerfile: Dockerfile
     env_file: ../../apps/ocpp/.env
     restart: unless-stopped
     expose: ['8080']

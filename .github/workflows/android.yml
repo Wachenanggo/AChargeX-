@@ -1,7 +1,7 @@
 # Builds an installable Android debug APK on GitHub's Linux runners — no computer needed.
 # Run it from GitHub → Actions → "Android APK" → Run workflow, then download the artifact.
 # Set repository variable VITE_API_URL (Settings → Secrets and variables → Actions → Variables)
-# to your OCPP service URL, e.g. https://achargex.duckdns.org
+# to your AChargeX server URL, e.g. https://achargex.onrender.com
 name: Android APK
 on:
   workflow_dispatch:

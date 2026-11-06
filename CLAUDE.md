@@ -39,6 +39,9 @@ npx tsx scripts/gen-seed.ts > supabase/seed.sql
 ```
 For screenshots/e2e: `npm run build -w @achargex/web && (cd apps/web && npx vite preview)` with the OCPP service running.
 
+## Deployment
+Default free deployment = ONE service: root `Dockerfile` builds web + OCPP; the OCPP server serves `apps/web/dist` when `STATIC_DIR` is set (`apps/ocpp/src/static.ts`), so the API is same-origin (`VITE_API_URL` empty). `render.yaml` deploys it on Render's free plan; `PUBLIC_*` URLs default from `RENDER_EXTERNAL_URL`. `deploy/oracle` runs the same image always-on. `apps/ocpp/Dockerfile` is the API-only image.
+
 ## Design principles
 - Mobile-first. Verify at 320, 360, 390, 430, 768, 1024, 1440. No horizontal overflow (screens.mjs asserts it).
 - Phones: single column, bottom nav (Home · Find · **Scan FAB** · Garage · Wallet), content padded with `.pb-nav`; Find shows map **or** list + selected-station card. ≥768: Find is split list+map. ≥1024: sidebar, no bottom nav.
