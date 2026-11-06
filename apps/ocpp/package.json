@@ -1,0 +1,24 @@
+{
+  "name": "@achargex/ocpp",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "AChargeX OCPP service — multi-version (1.6J / 2.0.1) CSMS, REST API, SSE and isolated simulator.",
+  "scripts": {
+    "dev": "tsx watch src/main.ts",
+    "start": "node dist/main.js",
+    "build": "tsc -p tsconfig.json --noEmit && esbuild src/main.ts --bundle --platform=node --format=esm --target=node20 --outfile=dist/main.js --packages=external --alias:@achargex/shared=../../packages/shared/src/index.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@achargex/shared": "0.1.0",
+    "@types/node": "^22.10.0",
+    "@types/ws": "^8.5.13",
+    "esbuild": "^0.24.0",
+    "tsx": "^4.19.2"
+  }
+}

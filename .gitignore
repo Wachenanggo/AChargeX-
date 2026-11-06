@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.vite/
+*.log
+.env
+.env.*
+!.env.example
+coverage/
+test-results/
+playwright-report/
+screenshots/
+apps/web/android/
+apps/web/ios/
+.DS_Store
